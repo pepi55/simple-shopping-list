@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>List Details</title>
+	</head>
+
+	<body>
+		<h1>{{ shoppinglist.list_name }}</h1>
+
+		<ul>
+			{% for item in shoppinglist.shoppingitem_set.all %}
+				<li>{{ item }}</li>
+			{% endfor %}
+		</ul>
+	</body>
+</html>
