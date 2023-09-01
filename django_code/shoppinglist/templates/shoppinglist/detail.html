@@ -2,18 +2,59 @@
 
 <html lang="en">
 	<head>
+		{% load static %}
+
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="stylesheet" href="{% static 'shoppinglist/style.css' %}">
+
 		<title>List Details</title>
 	</head>
 
 	<body>
-		<h1>{{ shoppinglist.list_name }}</h1>
+		<a href="{% url 'shoppinglist:index' %}">home</a>
 
-		<ul>
-			{% for item in shoppinglist.shoppingitem_set.all %}
-				<li>{{ item }}</li>
-			{% endfor %}
-		</ul>
+		<form action="{% url 'shoppinglist:update' shoppinglist.id %}" method="post" accept-charset="utf-8">
+			{% csrf_token %}
+			<fieldset>
+				<legend><h1>{{ shoppinglist.list_name }}</h1></legend>
+				{% if error_message %} <p><strong>{{ error_message }}</strong></p> {% endif %}
+
+				{% for item in shoppinglist.shoppingitem_set.all %}
+					<input type="checkbox" name="item" id="item{{ forloop.counter }}" value="{{ item.id }}" {% if item.bought %} checked="{{ item.bought }}" {% endif %}>
+					<label for="item{{ forloop.counter }}" class="strikethrough">{{ item }}</label>
+					<br />
+				{% endfor %}
+
+				<br />
+				<input type="submit" name="update" id="update" value="Finish Shopping">
+			</fieldset>
+		</form>
+
+		<form action="{% url 'shoppinglist:add_item' shoppinglist.id %}" method="post" accept-charset="utf-8">
+			{% csrf_token %}
+			<fieldset id="new_item">
+				<legend>add new item</legend>
+
+				<label>item quantity, item name/description: </label>
+				<br />
+				<input type="number" name="quantity" id="quantity" value="1">
+				<label>, </label>
+				<input type="text" name="name" id="name" value="{{ list.id }}">
+				<br /> <br />
+
+				<input type="submit" name="submit" id="submit" value="Add">
+			</fieldset>
+		</form>
+
+		<form action="{% url 'shoppinglist:delete' shoppinglist.id %}" method="post" accept-charset="utf-8">
+			{% csrf_token %}
+
+			<fieldset id="cleanup" class="deleter">
+				<legend>cleanup</legend>
+				<p><b>Warning!</b> This will remove all <u>checked items</u> which were updated using the "Finish Shopping" button.</p>
+				<input type="submit" name="delete" id="submit" value="Delete bought products">
+			</fieldset>
+		</form>
 	</body>
 </html>

@@ -3,6 +3,9 @@ from django.db import models
 class List(models.Model):
     list_name: models.CharField = models.CharField("name of list", max_length = 200)
 
+    def list_size(self) -> int:
+        return len(self.shoppingitem_set.all())
+
     def __str__(self) -> str:
         return self.list_name
 
@@ -16,4 +19,4 @@ class ShoppingItem(models.Model):
         return quantity == 0
 
     def __str__(self) -> str:
-        return str(self.quantity) + " " + self.item_name + ", bought? " + str(self.bought)
+        return str(self.quantity) + " " + self.item_name

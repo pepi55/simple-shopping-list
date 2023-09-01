@@ -1,0 +1,13 @@
+body {
+	background: white url("images/background.png") no-repeat;
+	background-size: 50px;
+	background-position: right 5px top 5px;
+}
+
+input[type=checkbox]:checked + label.strikethrough {
+	text-decoration: line-through;
+}
+
+fieldset.deleter {
+	border-color: red;
+}
