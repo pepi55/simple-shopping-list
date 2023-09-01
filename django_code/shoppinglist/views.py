@@ -26,8 +26,11 @@ def update(request: HttpRequest, list_id: int) -> HttpResponseRedirect:
         except (KeyError, ShoppingItem.DoesNotExist):
             return render(request, "shoppinglist/detail.html", { "shoppinglist": shoppinglist, "error_message": item + " not in list" })
         else:
-            selected_item.bought = True
-            selected_item.save()
+            if "delete" in request.POST:
+                selected_item.delete()
+            elif "update" in request.POST:
+                selected_item.bought = True
+                selected_item.save()
 
     return HttpResponseRedirect(reverse("shoppinglist:detail", args = [shoppinglist.id]))
 

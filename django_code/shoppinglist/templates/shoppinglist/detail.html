@@ -27,7 +27,8 @@
 				{% endfor %}
 
 				<br />
-				<input type="submit" name="update" id="update" value="Finish Shopping">
+				<input type="submit" name="update" value="Finish Shopping">
+				<input type="submit" name="delete" value="Remove Selected">
 			</fieldset>
 		</form>
 
@@ -50,11 +51,13 @@
 		<form action="{% url 'shoppinglist:delete' shoppinglist.id %}" method="post" accept-charset="utf-8">
 			{% csrf_token %}
 
+			<!--
 			<fieldset id="cleanup" class="deleter">
 				<legend>cleanup</legend>
 				<p><b>Warning!</b> This will remove all <u>checked items</u> which were updated using the "Finish Shopping" button.</p>
 				<input type="submit" name="delete" id="submit" value="Delete bought products">
 			</fieldset>
+			-->
 		</form>
 	</body>
 </html>

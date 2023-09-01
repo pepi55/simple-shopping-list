@@ -9,5 +9,5 @@ urlpatterns: list = [
         path("<int:list_id>/", views.detail, name = "detail"),
         path("<int:list_id>/update", views.update, name = "update"),
         path("<int:list_id>/delete", views.delete, name = "delete"),
-        path("<int:list_id>/add_item", views.add, name = "add_item"),
+        path("<int:list_id>/add_item", views.add, name = "add_item")
 ]
