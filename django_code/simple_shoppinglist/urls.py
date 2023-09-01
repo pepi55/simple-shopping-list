@@ -21,5 +21,5 @@ from django.contrib import admin
 urlpatterns = [
         # There is no admin... Maybe there is an admin.
         path('admin/', admin.site.urls),
-        path('shoppinglists/', include("shoppinglist.urls")),
+        path('', include("shoppinglist.urls")),
 ]
