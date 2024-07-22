@@ -22,6 +22,6 @@ urlpatterns = [
         # There is no admin... Maybe there is an admin.
         path('admin/', admin.site.urls),
         path('', include("shoppinglist.urls")),
-        path('', include("pwa.urls")),
+        #path('', include("pwa.urls")),
 
 ]
