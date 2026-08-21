@@ -17,14 +17,21 @@ Including another URLconf
 
 import os
 
+from django.http import HttpRequest, HttpResponse
 from django.urls import include, path
 from django.contrib import admin
+
+
+def robots_txt(request: HttpRequest) -> HttpResponse:
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type = "text/plain")
+
 
 urlpatterns = [
         # Path lives in the env, not here -- this file is on public GitHub,
         # so this buys little on its own. django-axes (settings.py) is the
         # actual control.
         path(os.environ["ADMIN_URL"], admin.site.urls),
+        path('robots.txt', robots_txt),
         path('', include("shoppinglist.urls")),
         #path('', include("pwa.urls")),
 

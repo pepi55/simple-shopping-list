@@ -18,7 +18,6 @@
 			{% csrf_token %}
 			<fieldset>
 				<legend><h1>{{ shoppinglist.list_name }}</h1></legend>
-				{% if error_message %} <p><strong>{{ error_message }}</strong></p> {% endif %}
 
 				{% for item in shoppinglist.shoppingitem_set.all %}
 					<input type="checkbox" name="item" id="item{{ forloop.counter }}" value="{{ item.id }}" {% if item.bought %} checked="{{ item.bought }}" {% endif %}>
@@ -39,9 +38,9 @@
 
 				<label>item quantity, item name/description: </label>
 				<br />
-				<input style="width: 3em;" type="number" name="quantity" id="quantity" value="1" min="1" max="999">
+				{{ add_form.quantity }}
 				<label>, </label>
-				<input type="text" name="name" id="name" value="{{ list.id }}">
+				{{ add_form.item_name }}
 				<br /> <br />
 
 				<input type="submit" name="submit" id="submit" value="Add">
@@ -51,13 +50,12 @@
 		<form action="{% url 'shoppinglist:delete' shoppinglist.id %}" method="post" accept-charset="utf-8">
 			{% csrf_token %}
 
-			<!--
 			<fieldset id="cleanup" class="deleter">
 				<legend>cleanup</legend>
-				<p><b>Warning!</b> This will remove all <u>checked items</u> which were updated using the "Finish Shopping" button.</p>
+				<p><b>Warning!</b> This will remove all <u>bought items</u> which were updated using the "Save Selected" button.</p>
+				<input type="hidden" name="confirm" value="yes">
 				<input type="submit" name="delete" id="submit" value="Delete bought products">
 			</fieldset>
-			-->
 		</form>
 	</body>
 </html>

@@ -42,6 +42,11 @@ CSRF_COOKIE_SECURE = True
 # painful to unwind.
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# This only makes the header claim preload-readiness; it does nothing until
+# you actually submit the domain at hstspreload.org, which should wait until
+# SECURE_HSTS_SECONDS is raised to a year. Set now so `check --deploy` is
+# clean from day one instead of trickling in warnings later.
+SECURE_HSTS_PRELOAD = True
 CSRF_TRUSTED_ORIGINS = ["https://petar-dev.com", "https://*.petar-dev.com"]
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
@@ -81,6 +86,20 @@ AUTHENTICATION_BACKENDS = [
 ]
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
+
+# django-ratelimit counts in this cache. LocMemCache is per-process, so with
+# more than one gunicorn worker each worker keeps its own counter and the
+# real limit silently becomes workers x rate -- hence workers = 1 in
+# gunicorn_conf.py. FileBasedCache keeps this correct if workers ever
+# increase. Do not switch to DatabaseCache: it writes to the same SQLite
+# file the app uses and multiplies write-lock contention.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
+        'LOCATION': BASE_DIR / 'django_cache',
+    }
+}
+RATELIMIT_VIEW = 'shoppinglist.views.ratelimited_view'
 
 ROOT_URLCONF = 'simple_shoppinglist.urls'
 
