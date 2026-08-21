@@ -1,7 +1,9 @@
-#python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn.workers.UvicornWorker --bind 'Pie3:8080' --access-logfile=./access.log --access-logformat "%(h)s %(l)s %(u)s %(t)s '%(r)s' %(s)s %(b)s '%(f)s' '%(a)s'" --error-logfile=./error.log
+# gunicorn TLS configuration for HTTPS support
 
-bind = 'Pie3:8080'
-errorlog = "./error.log"
-accesslog = "./access.log"
+# HTTPS listener with TLS termination (cert/key from env or defaults)
+bind_https = '0.0.0.0:443'
+cert_path = 'cert.pem'
+key_path = 'key.pem'
 
-access_log_format = "%(h)s %(l)s %(u)s %(t)s '%(r)s' %(s)s %(b)s '%(f)s' '%(a)s'"
+# HTTP redirect listener (port 80)
+bind_http = '0.0.0.0:80'
