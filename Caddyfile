@@ -1,0 +1,23 @@
+petar-dev.com, *.petar-dev.com {
+	encode gzip
+
+	header X-Robots-Tag "noindex"
+
+	# Rate-limit login attempts against the moved admin path (set via
+	# ADMIN_URL in /etc/simple-shoppinglist.env). Requires the
+	# caddy-ratelimit plugin. Update the path below to match ADMIN_URL.
+	# rate_limit {
+	# 	zone admin_login {
+	# 		match {
+	# 			path /CHANGE-ME-ADMIN-URL/login/*
+	# 		}
+	# 		key {remote_host}
+	# 		events 5
+	# 		window 1m
+	# 	}
+	# }
+
+	reverse_proxy 127.0.0.1:8080 {
+		header_up X-Forwarded-Proto {scheme}
+	}
+}
