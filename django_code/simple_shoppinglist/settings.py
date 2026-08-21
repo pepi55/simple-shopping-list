@@ -23,12 +23,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ["SECRET_KEY"]
-CSRF_COOKIE_SECURE = False
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [ "127.0.0.1", ".petar-dev.com", "pie3", "192.168.2.43", "84.82.138.101" ]
+ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(",")
+
+# The app sits behind a Caddy reverse proxy that terminates TLS. Caddy must
+# unconditionally overwrite X-Forwarded-Proto on every request it forwards --
+# if a client could set this header itself, Django would treat a plaintext
+# request as secure.
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+# Start low and raise to 31536000 (1 year) after a week of clean operation --
+# a misconfiguration on a domain hosting other services would otherwise be
+# painful to unwind.
+SECURE_HSTS_SECONDS = 60
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+CSRF_TRUSTED_ORIGINS = ["https://petar-dev.com", "https://*.petar-dev.com"]
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SAMESITE = "Lax"
 
 
 # Application definition
@@ -41,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',
     #'pwa'
 ]
 
@@ -51,9 +68,19 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware'
 ]
+
+# django-axes: lock out the /admin/ login after repeated failures. This is
+# the load-bearing control on that endpoint, not the URL path change below.
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+AXES_FAILURE_LIMIT = 5
+AXES_COOLOFF_TIME = 1
 
 ROOT_URLCONF = 'simple_shoppinglist.urls'
 

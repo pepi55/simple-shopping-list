@@ -15,12 +15,16 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
+import os
+
 from django.urls import include, path
 from django.contrib import admin
 
 urlpatterns = [
-        # There is no admin... Maybe there is an admin.
-        path('admin/', admin.site.urls),
+        # Path lives in the env, not here -- this file is on public GitHub,
+        # so this buys little on its own. django-axes (settings.py) is the
+        # actual control.
+        path(os.environ["ADMIN_URL"], admin.site.urls),
         path('', include("shoppinglist.urls")),
         #path('', include("pwa.urls")),
 
