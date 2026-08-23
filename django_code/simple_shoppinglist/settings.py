@@ -28,7 +28,8 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # 127.0.0.1 only. Trust only Caddy's X-Forwarded-Proto (Caddy is
 # configured to overwrite, not append, so clients cannot spoof it).
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = True
+# Defaults to True; set SECURE_SSL_REDIRECT=0 for plain-HTTP local dev.
+SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "1").strip().lower() not in ("0", "false", "no")
 SECURE_HSTS_SECONDS = 60
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = False
@@ -39,17 +40,21 @@ SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_TRUSTED_ORIGINS = [
     "https://petar-dev.com",
     "https://*.petar-dev.com",
+    # LAN access through the NAT-internal hostname (Caddy: tls internal).
+    "https://pie3",
 ]
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Opt-in only: set DJANGO_DEBUG=1 to enable. Never enable in production.
+DEBUG = os.environ.get("DJANGO_DEBUG", "").strip().lower() in ("1", "true", "yes")
 
 # Comma-separated host list, e.g. "petar-dev.com,.petar-dev.com,pie3".
-# Required: the app is served behind a single host now.
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "petar-dev.com,.petar-dev.com").split(",") if h.strip()]
+# pie3 is included by default: the app is behind a NAT router, and LAN
+# clients reach it via the internal hostname as well as the public DNS
+# name.
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "petar-dev.com,.petar-dev.com,pie3").split(",") if h.strip()]
 
 
 # Application definition

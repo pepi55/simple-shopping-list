@@ -1,40 +1,49 @@
-# Caddy terminates TLS for petar-dev.com and reverse-proxies to the
-# loopback-bound gunicorn. Do not expose gunicorn on a public interface
-# — every other security control is bypassed if the origin is reachable
-# directly.
+# Caddy terminates TLS and reverse-proxies to the loopback-bound
+# gunicorn. Do not expose gunicorn on a public interface — every other
+# security control is bypassed if the origin is reachable directly.
+#
+# Only stock Caddy functionality is used here; no third-party plugins.
 
-# `header_up -X-Forwarded-Proto` forces Caddy to *overwrite* (not
-# append) the header. Without this, a client can spoof
-# X-Forwarded-Proto over plaintext and Django will trust the request as
-# secure.
-petar-dev.com, *.petar-dev.com {
-    encode zstd gzip
-    reverse_proxy 127.0.0.1:8080 {
-        header_up -X-Forwarded-Proto
-        header_up X-Forwarded-Proto https
-        header_up Host {host}
-    }
+# petar-dev.com gets a public Let's Encrypt cert via the standard
+# HTTP-01/TLS-ALPN challenges. A *.petar-dev.com wildcard is
+# deliberately NOT used: wildcards require the DNS-01 challenge, which
+# needs a DNS provider plugin.
 
-    header {
-        # Discourage indexing while we are world-writable.
-        X-Robots-Tag "noindex, nofollow"
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Content-Type-Options "nosniff"
-        Referrer-Policy "same-origin"
-        # Belt and braces with Django's SECURE_BROWSER_XSS_FILTER;
-        # X-XSS-Protection is deprecated but harmless and still honoured
-        # by some legacy crawlers.
-        X-XSS-Protection "1; mode=block"
-    }
+# The LAN hostname pie3 has no public DNS record, so Let's Encrypt
+# cannot issue for it. `tls internal` uses Caddy's built-in local CA
+# instead; browsers on the LAN will warn until Caddy's root CA is
+# trusted on those machines.
 
-    # Optional: rate-limit login attempts at the edge. Kept here rather
-    # than in Django so a flood never reaches the app process.
-    # Uncomment and tune when P0-2 lands.
-    # @login path /admin/login/
-    # rate_limit @login 10r/m
+(petardev_app) {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8080 {
+		header_up -X-Forwarded-Proto
+		header_up X-Forwarded-Proto https
+		header_up Host {host}
+	}
 
-    log {
-        output stdout
-        format console
-    }
+	header {
+		# Discourage indexing while we are world-writable.
+		X-Robots-Tag "noindex, nofollow"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		# Belt and braces with Django's SECURE_BROWSER_XSS_FILTER;
+		# X-XSS-Protection is deprecated but harmless and still honoured
+		# by some legacy crawlers.
+		X-XSS-Protection "1; mode=block"
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+petar-dev.com {
+	import petardev_app
+}
+
+pie3 {
+	tls internal
+	import petardev_app
 }
