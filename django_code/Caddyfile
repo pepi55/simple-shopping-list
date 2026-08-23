@@ -1,0 +1,40 @@
+# Caddy terminates TLS for petar-dev.com and reverse-proxies to the
+# loopback-bound gunicorn. Do not expose gunicorn on a public interface
+# — every other security control is bypassed if the origin is reachable
+# directly.
+
+# `header_up -X-Forwarded-Proto` forces Caddy to *overwrite* (not
+# append) the header. Without this, a client can spoof
+# X-Forwarded-Proto over plaintext and Django will trust the request as
+# secure.
+petar-dev.com, *.petar-dev.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080 {
+        header_up -X-Forwarded-Proto
+        header_up X-Forwarded-Proto https
+        header_up Host {host}
+    }
+
+    header {
+        # Discourage indexing while we are world-writable.
+        X-Robots-Tag "noindex, nofollow"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "same-origin"
+        # Belt and braces with Django's SECURE_BROWSER_XSS_FILTER;
+        # X-XSS-Protection is deprecated but harmless and still honoured
+        # by some legacy crawlers.
+        X-XSS-Protection "1; mode=block"
+    }
+
+    # Optional: rate-limit login attempts at the edge. Kept here rather
+    # than in Django so a flood never reaches the app process.
+    # Uncomment and tune when P0-2 lands.
+    # @login path /admin/login/
+    # rate_limit @login 10r/m
+
+    log {
+        output stdout
+        format console
+    }
+}

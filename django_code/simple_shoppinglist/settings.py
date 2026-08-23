@@ -23,11 +23,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ["SECRET_KEY"]
+
+# TLS is terminated at the Caddy front proxy on :443; gunicorn binds to
+# 127.0.0.1 only. Trust only Caddy's X-Forwarded-Proto (Caddy is
+# configured to overwrite, not append, so clients cannot spoof it).
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_SSL_REDIRECT = True
+SECURE_HSTS_SECONDS = 60
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = False
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_TRUSTED_ORIGINS = [
+    "https://petar-dev.com",
+    "https://*.petar-dev.com",
+]
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_BROWSER_XSS_FILTER = True
@@ -35,7 +47,9 @@ SECURE_BROWSER_XSS_FILTER = True
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [ ".petar-dev.com", "pie3" ]
+# Comma-separated host list, e.g. "petar-dev.com,.petar-dev.com,pie3".
+# Required: the app is served behind a single host now.
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get("ALLOWED_HOSTS", "petar-dev.com,.petar-dev.com").split(",") if h.strip()]
 
 
 # Application definition

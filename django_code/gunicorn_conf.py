@@ -1,9 +1,7 @@
-# gunicorn TLS configuration for HTTPS support
-
-# HTTPS listener with TLS termination (cert/key from env or defaults)
-bind_https = '0.0.0.0:443'
-cert_path = 'cert.pem'
-key_path = 'key.pem'
-
-# HTTP redirect listener (port 80)
-bind_http = '0.0.0.0:80'
+# Gunicorn is bound to loopback only. TLS terminates at the Caddy front
+# proxy (see Caddyfile). Caddy forwards to 127.0.0.1:8080 and sets
+# X-Forwarded-Proto; only Caddy is trusted to set forwarded headers.
+bind = "127.0.0.1:8080"
+forwarded_allow_ips = "127.0.0.1"
+workers = 1
+worker_class = "uvicorn.workers.UvicornWorker"
