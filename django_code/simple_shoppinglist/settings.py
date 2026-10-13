@@ -63,6 +63,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'axes',
+    # Loads django-ratelimit's system checks, which reject non-atomic cache
+    # backends (django_ratelimit.E003) -- without this they never run.
+    'django_ratelimit',
     #'pwa'
 ]
 
@@ -75,7 +78,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'axes.middleware.AxesMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Turns the Ratelimited exception into RATELIMIT_VIEW's 429. Without it
+    # the exception is a plain PermissionDenied and clients get a 403.
+    'django_ratelimit.middleware.RatelimitMiddleware',
 ]
 
 # django-axes: lock out the /admin/ login after repeated failures. This is
@@ -87,16 +93,18 @@ AUTHENTICATION_BACKENDS = [
 AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1
 
-# django-ratelimit counts in this cache. LocMemCache is per-process, so with
-# more than one gunicorn worker each worker keeps its own counter and the
-# real limit silently becomes workers x rate -- hence workers = 1 in
-# gunicorn_conf.py. FileBasedCache keeps this correct if workers ever
-# increase. Do not switch to DatabaseCache: it writes to the same SQLite
-# file the app uses and multiplies write-lock contention.
+# django-ratelimit counts in this cache, and the backend must have an atomic
+# add/incr. Under ASGI every request runs on its own thread, so concurrent
+# requests race even with workers = 1: on FileBasedCache (check-then-write)
+# a burst of 50 parallel POSTs all got through a 5/m limit. LocMemCache is
+# atomic but per-process, DatabaseCache is non-atomic and shares the SQLite
+# write lock. Memcached on loopback is atomic and shared across workers.
+# If memcached is down, rate-limited (write) endpoints raise and return 500:
+# they fail closed, reads are unaffected.
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': BASE_DIR / 'django_cache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': os.environ.get('MEMCACHED_LOCATION', '127.0.0.1:11211'),
     }
 }
 RATELIMIT_VIEW = 'shoppinglist.views.ratelimited_view'

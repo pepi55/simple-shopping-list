@@ -6,9 +6,9 @@ bind = '127.0.0.1:8080'
 errorlog = "./error.log"
 accesslog = "./access.log"
 
-# Correct anyway on a Pi with SQLite (write contention), but also required
-# for django-ratelimit's FileBasedCache counters to represent a real global
-# rate rather than N independent per-worker counters -- see CACHES in
+# Correct on a Pi with SQLite (write contention). This does not serialise
+# requests -- under ASGI each one runs on its own thread -- so rate limiting
+# relies on memcached's atomic counters, not on this; see CACHES in
 # settings.py.
 workers = 1
 
