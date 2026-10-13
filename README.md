@@ -10,8 +10,14 @@ Simple applet for tracking shopping lists for multiple users.
  - `ADMIN_URL` — path to mount the Django admin at, instead of the default
    `admin/`. Must end with a trailing slash, e.g. `ADMIN_URL="mgmt-a1b2c3/"`.
    The app fails to start if this is unset.
+ - `MEMCACHED_LOCATION` — optional, defaults to `127.0.0.1:11211`.
 
 ## Running
+
+Rate limiting needs memcached, whose atomic counters are what make the limit
+hold under concurrent requests. On Debian/Raspberry Pi OS: `apt install
+memcached` (it binds to loopback by default). If memcached is down, write
+endpoints fail with a 500 rather than going unthrottled.
 
 The app must sit behind a reverse proxy (Caddy, see `Caddyfile`) that
 terminates TLS and forwards `X-Forwarded-Proto`. It must **not** be reachable
@@ -20,3 +26,9 @@ directly on its bind port from off-box — that bypasses TLS and the
 
  - Run server: `python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn.workers.UvicornWorker -c gunicorn_conf.py`
      - Run server (no gunicorn): `python -m uvicorn simple_shoppinglist.asgi:application --reload --port $PORT --host $HOST`
+
+## Testing
+
+From `django_code/`, with no env vars or memcached needed:
+
+`python manage.py test shoppinglist --settings=simple_shoppinglist.settings_test`
