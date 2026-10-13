@@ -1,9 +1,15 @@
+import threading
+import uuid
+
 from django.conf import settings
 from django.core.cache import cache
 from django.core.management import call_command
-from django.test import TestCase, override_settings
+from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django_ratelimit.checks import KNOWN_BROKEN_CACHE_BACKENDS
+from django_ratelimit.core import is_ratelimited
 
+import simple_shoppinglist.settings as production_settings
 from shoppinglist.models import List
 
 # The two literals that sat in public git history (P0-6). This is the only
@@ -50,14 +56,10 @@ class OutputEscapingTests(TestCase):
         self.assertContains(response, "&lt;script&gt;")
 
 
-@override_settings(
-    SECURE_SSL_REDIRECT=False,
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}},
-)
+@override_settings(SECURE_SSL_REDIRECT=False)
 class RateLimitTests(TestCase):
-    """P0-5. Uses an isolated LocMemCache per test so counts don't bleed
-    across test methods -- production uses FileBasedCache (settings.py),
-    the choice of backend doesn't matter to django-ratelimit's counting."""
+    """P0-5. Cleared per test so counts don't bleed across test methods. The
+    backend matters (it must be atomic); see the two classes below."""
 
     def setUp(self):
         cache.clear()
@@ -94,3 +96,64 @@ class RateLimitTests(TestCase):
             url, {"item_name": "still ok", "quantity": 1}, REMOTE_ADDR="10.0.0.2"
         )
         self.assertEqual(still_ok.status_code, 302)
+
+
+class RateLimitConcurrencyTests(SimpleTestCase):
+    """A burst of parallel requests must not get past the limit. Under ASGI
+    every request runs on its own thread, so this is what an attacker with
+    parallel connections sees. Runs against whatever settings.CACHES is, so
+    on the Pi it can be pointed at the production cache:
+
+        python manage.py test shoppinglist.tests.test_security.RateLimitConcurrencyTests \\
+            --settings=simple_shoppinglist.settings
+    """
+
+    THREADS = 50
+    RATE = 5
+
+    def test_rate_limit_holds_under_concurrent_burst(self):
+        # A fresh group per run, so leftover counts in a shared cache can't
+        # skew the result; a TEST-NET address can't collide with a real client.
+        group = f"test-burst-{uuid.uuid4()}"
+        request = RequestFactory().post("/", REMOTE_ADDR="203.0.113.7")
+        barrier = threading.Barrier(self.THREADS)
+        allowed = []
+        errors = []
+
+        def hit():
+            try:
+                barrier.wait()
+                if not is_ratelimited(
+                    request, group=group, key="ip", rate=f"{self.RATE}/m",
+                    method="POST", increment=True,
+                ):
+                    allowed.append(1)
+            except Exception as exc:  # surface it instead of losing it in the thread
+                errors.append(exc)
+
+        threads = [threading.Thread(target=hit) for _ in range(self.THREADS)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        self.assertEqual(errors, [])
+        self.assertEqual(len(allowed), self.RATE)
+
+
+class ProductionRateLimitConfigTests(SimpleTestCase):
+    """The test settings swap the cache out, so check the production module
+    directly: a regression to a non-atomic backend (FileBasedCache let 50 of
+    50 concurrent requests through a 5/m limit) must fail here."""
+
+    def test_production_cache_backend_supports_atomic_increment(self):
+        backend = production_settings.CACHES["default"]["BACKEND"]
+        self.assertNotIn(backend, KNOWN_BROKEN_CACHE_BACKENDS)
+
+    def test_ratelimit_system_checks_are_loaded(self):
+        self.assertIn("django_ratelimit", production_settings.INSTALLED_APPS)
+
+    def test_ratelimit_middleware_is_installed(self):
+        self.assertIn(
+            "django_ratelimit.middleware.RatelimitMiddleware", production_settings.MIDDLEWARE
+        )
