@@ -16,7 +16,7 @@ class ShoppingItem(models.Model):
     bought: models.BooleanField = models.BooleanField("is item bought", default = False)
 
     def bought_all(self) -> bool:
-        return quantity == 0
+        return self.quantity == 0
 
     def __str__(self) -> str:
         return str(self.quantity) + " " + self.item_name
