@@ -8,7 +8,7 @@
 - [x] P0‑5: Upgrade to Python 3.12 and Django 5.2 LTS (requirements updated; Python upgrade pending)
 
 ## P1 – Next steps
-- [ ] P1‑1: Consolidate to a single `requirements.txt` with a lockfile, add CI workflow, remove `latest_requirements.txt`
+- [x] P1‑1: Consolidate to a single `requirements.txt` with a lockfile, add CI workflow, remove `latest_requirements.txt`
 - [ ] P1‑2: Scope cookies and CSRF to the dedicated host (`__Host-` cookies, adjust `CSRF_TRUSTED_ORIGINS`, disable HSTS preload)
 - [ ] P1‑3: Close remaining rate‑limit gaps (unify destroy budget, verify IPv6 mask, test counters)
 - [ ] P1‑4: Replace `logging.conf` with systemd unit and add proper Django `LOGGING` dict (journald output, log levels)
