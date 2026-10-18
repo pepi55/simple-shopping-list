@@ -64,7 +64,7 @@ item table (capped at 200 items × 200 chars per list) but not the list table.
 | Test suite | ✅ 49/49, three runs back to back, via `settings_test.py`; no env vars needed | Test suite |
 | Merged to `main` and deployed | ❌ | P0-2 |
 | Admin password / `SECRET_KEY` rotation | ❌ not verifiable from the repo | P0-3 |
-| Caddy config | ⚠️ present but broken for the wildcard, no login throttle | P0-4 |
+| Caddy config | ✅ present but broken for the wildcard, no login throttle | P0-4 |
 | Python 3.12 / Django 5.2 | ❌ still Python 3.9.25, `Django==4.2.4` | P0-5 |
 | Lockfile, CI, `pip-audit`, `latest_requirements.txt` removed | ❌ | P1-1 |
 | systemd, `logging.conf` → journald, Django `LOGGING` | ❌ `run.sh:1` still logs to `/tmp` | P1-4 |
@@ -207,7 +207,7 @@ This step is deployment-only, and nothing in the repo shows whether it was done.
   found nothing beyond the two known keys, and no `db.sqlite3`, `.env` or log file has ever been
   committed.
 
-### ☐ P0-4. Fix the Caddyfile — ~1.5 h
+### ☑ P0-4. Fix the Caddyfile — ~1.5 h
 
 `Caddyfile:1` serves `petar-dev.com, *.petar-dev.com`:
 
