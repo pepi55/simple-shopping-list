@@ -2,6 +2,9 @@ anyio==4.14.2
 asgiref==3.12.1
 click==8.4.2
 Django==6.1
+django-axes==8.3.1
+django-pwa==2.0.1
+django-ratelimit==4.1.0
 gunicorn==26.1.0
 h11==0.16.0
 httptools==0.8.0
