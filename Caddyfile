@@ -1,7 +1,14 @@
-petar-dev.com, *.petar-dev.com {
+list.petar-dev.com {
 	encode gzip
 
-	header X-Robots-Tag "noindex"
+	request_body {
+		max_size 256KB
+	}
+
+	header {
+		X-Robots-Tag "noindex"
+		Content-Security-Policy-Report-Only "default-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+	}
 
 	# Rate-limit login attempts against the moved admin path (set via
 	# ADMIN_URL in /etc/simple-shoppinglist.env). Requires the
@@ -17,7 +24,5 @@ petar-dev.com, *.petar-dev.com {
 	# 	}
 	# }
 
-	reverse_proxy 127.0.0.1:8080 {
-		header_up X-Forwarded-Proto {scheme}
-	}
+	reverse_proxy 127.0.0.1:8080
 }

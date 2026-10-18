@@ -27,7 +27,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(",")
+ALLOWED_HOSTS = ["list.petar-dev.com"]
 
 # The app sits behind a Caddy reverse proxy that terminates TLS. Caddy must
 # unconditionally overwrite X-Forwarded-Proto on every request it forwards --
@@ -47,7 +47,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 # SECURE_HSTS_SECONDS is raised to a year. Set now so `check --deploy` is
 # clean from day one instead of trickling in warnings later.
 SECURE_HSTS_PRELOAD = True
-CSRF_TRUSTED_ORIGINS = ["https://petar-dev.com", "https://*.petar-dev.com"]
+CSRF_TRUSTED_ORIGINS = ["https://list.petar-dev.com"]
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
@@ -177,6 +177,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Limit request body size to 256KB to mitigate abusive large payloads
+DATA_UPLOAD_MAX_MEMORY_SIZE = 256 * 1024
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
