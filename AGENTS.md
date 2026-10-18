@@ -18,7 +18,7 @@ Hand the real commit off to the user with a commit.sh script they run:
 
 - Outside a worktree — don't run git commit at all. Write commit.sh at the repo root containing the exact git add / git commit invocations you intended (one commit per git commit call, real Conventional-Commit messages, trailers, etc.), then tell the user to run it.
 - Inside a worktree — commit normally at sensible stopping points; those land unsigned on the agent/<name> branch. Still write commit.sh at the worktree root, but its job is to reflect the range you authored this session. Pick <base> as the parent of your first commit (e.g. HEAD~3 for three commits, or $(git merge-base HEAD <parent-branch>) when the count is dynamic).
-- The script should handle removing itself on succesful execution.
+- The script should handle removing itself on succesful execution. Ensure the script does not add itself to the commit.
 
 ## Pushing changes
 
