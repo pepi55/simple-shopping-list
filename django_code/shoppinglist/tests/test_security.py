@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.core.management import call_command
 from django.test import RequestFactory, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+from django.utils.module_loading import import_string
 from django_ratelimit.checks import KNOWN_BROKEN_CACHE_BACKENDS
 from django_ratelimit.core import is_ratelimited
 
@@ -149,6 +150,13 @@ class ProductionRateLimitConfigTests(SimpleTestCase):
     def test_production_cache_backend_supports_atomic_increment(self):
         backend = production_settings.CACHES["default"]["BACKEND"]
         self.assertNotIn(backend, KNOWN_BROKEN_CACHE_BACKENDS)
+
+    def test_production_cache_client_library_is_installed(self):
+        # The test settings never load the memcached backend, and it imports
+        # its client library only when constructed. Without this, a dropped
+        # pymemcache pin passes the suite and 500s every write in production.
+        config = production_settings.CACHES["default"]
+        import_string(config["BACKEND"])(config["LOCATION"], {})
 
     def test_ratelimit_system_checks_are_loaded(self):
         self.assertIn("django_ratelimit", production_settings.INSTALLED_APPS)
