@@ -29,4 +29,4 @@ jobs:
           ALLOWED_HOSTS: "localhost,127.0.0.1"
         run: |
           cd django_code
-          python manage.py test shoppinglist --settings=simple_shoppinglist.settings_test
+          python -Wa manage.py test shoppinglist --settings=simple_shoppinglist.settings_test
