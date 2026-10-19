@@ -29,7 +29,7 @@ Do not execute the script yourself and let the user run it manually.
 
 # Repo-specific: simple-shopping-list
 
-A small Django 6.1 app for shared shopping lists. The Django project lives in `django_code/`
+A small Django 5.2 LTS app for shared shopping lists. The Django project lives in `django_code/`
 (not the repo root). Everything below is relative to that subdir unless stated otherwise.
 
 ## Layout
@@ -40,8 +40,10 @@ A small Django 6.1 app for shared shopping lists. The Django project lives in `d
 - `django_code/run.sh` — production launch (gunicorn + uvicorn worker, logging config).
 - `django_code/gunicorn_conf.py`, `django_code/logging.conf` — server config.
 - `django_code/Caddyfile` — production reverse proxy; terminates TLS on :443.
-- `requirements.txt` at repo root — pip dependencies (pinned). No `pyproject.toml`, no
-  `Pipfile`, no `setup.cfg`. `Django==6.1`, `gunicorn`, `whitenoise`, `uvicorn`.
+- `requirements.txt` at repo root — full `pip freeze`, exact pins without hashes (hashed
+  lockfile pending, P1-1). No `pyproject.toml`, no `Pipfile`, no `setup.cfg`. Targets
+  Python 3.12 + `Django==5.2.x` (LTS), with `gunicorn`, `uvicorn` + `uvicorn-worker`, `whitenoise`,
+  `django-axes`, `django-ratelimit` and `pymemcache`.
 - `TODO.md` — phased security hardening plan; check it before proposing large changes.
 
 ## Required env

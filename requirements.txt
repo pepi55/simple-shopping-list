@@ -1,21 +1,23 @@
-anyio==4.15.1
+# Runtime: Python 3.12 + Django 5.2 LTS (P0-5). Django 5.2 needs Python >= 3.10.
+#
+# Full `pip freeze` of a fresh venv that passed the suite, `check --deploy` and
+# pip-audit on 2026-10-19. P1-1 replaces this file with a hash-pinned lockfile
+# compiled from a requirements.in.
 asgiref==3.12.1
 click==8.5.0
-Django==6.1
+Django==5.2.18
 django-axes==8.3.1
-# django-pwa removed
 django-ratelimit==4.1.0
-gunicorn==26.2.2
+gunicorn==26.2.0
+# CVE-2025-43859 (chunked-encoding request smuggling) is fixed in 0.16.
 h11==0.16.0
-httptools==0.8.0
-idna==3.19
-packaging==26.3
-# python-dotenv removed
-PyYAML==6.0.3
-sniffio==1.3.1
+# The HTTP parser uvicorn prefers. If it's missing, uvicorn falls back to h11.
+httptools==0.9.0
+# Client library for the PyMemcacheCache backend in settings.py. Without it
+# every rate-limited write endpoint returns 500.
+pymemcache==4.0.0
 sqlparse==0.6.0
 uvicorn==0.54.0
-uvloop==0.23.0
-watchfiles==1.2.0
-websockets==17.2
+# Home of UvicornWorker since uvicorn deprecated uvicorn.workers in 0.30.
+uvicorn-worker==0.4.0
 whitenoise==6.12.0

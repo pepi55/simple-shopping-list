@@ -14,6 +14,9 @@ Simple applet for tracking shopping lists for multiple users.
 
 ## Running
 
+Requires Python 3.12 (Django 5.2 LTS supports 3.10–3.13): `pip install -r
+requirements.txt`.
+
 Rate limiting needs memcached, whose atomic counters are what make the limit
 hold under concurrent requests. On Debian/Raspberry Pi OS: `apt install
 memcached` (it binds to loopback by default). If memcached is down, write
@@ -24,7 +27,7 @@ terminates TLS and forwards `X-Forwarded-Proto`. It must **not** be reachable
 directly on its bind port from off-box — that bypasses TLS and the
 `SECURE_SSL_REDIRECT`/HSTS settings entirely.
 
- - Run server: `python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn.workers.UvicornWorker -c gunicorn_conf.py`
+ - Run server: `python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn_worker.UvicornWorker -c gunicorn_conf.py`
      - Run server (no gunicorn): `python -m uvicorn simple_shoppinglist.asgi:application --reload --port $PORT --host $HOST`
 
 ## Testing

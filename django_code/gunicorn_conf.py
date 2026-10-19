@@ -1,4 +1,4 @@
-#python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn.workers.UvicornWorker --bind '127.0.0.1:8080' --access-logfile=./access.log --access-logformat "%(h)s %(l)s %(u)s %(t)s '%(r)s' %(s)s %(b)s '%(f)s' '%(a)s'" --error-logfile=./error.log
+#python -m gunicorn simple_shoppinglist.asgi:application -k uvicorn_worker.UvicornWorker --bind '127.0.0.1:8080' --access-logfile=./access.log --access-logformat "%(h)s %(l)s %(u)s %(t)s '%(r)s' %(s)s %(b)s '%(f)s' '%(a)s'" --error-logfile=./error.log
 
 # Caddy terminates TLS and proxies here. The app must never be reachable on
 # :8080 directly -- that would bypass TLS and every downstream control.
