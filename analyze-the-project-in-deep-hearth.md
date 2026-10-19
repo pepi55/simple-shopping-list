@@ -65,7 +65,7 @@ item table (capped at 200 items × 200 chars per list) but not the list table.
 | Merged to `main` and deployed | ❌ | P0-2 |
 | Admin password / `SECRET_KEY` rotation | ❌ not verifiable from the repo | P0-3 |
 | Caddy config | ✅ present but broken for the wildcard, no login throttle | P0-4 |
-| Python 3.12 / Django 5.2 | ❌ still Python 3.9.25, `Django==4.2.4` | P0-5 |
+| Python 3.12 / Django 5.2 | 🟡 `requirements.txt` pins Django 5.2.18, verified (suite, `check --deploy`, pip-audit); Pi still on 3.9 | P0-5 |
 | Lockfile, CI, `pip-audit`, `latest_requirements.txt` removed | ❌ | P1-1 |
 | systemd, `logging.conf` → journald, Django `LOGGING` | ❌ `run.sh:1` still logs to `/tmp` | P1-4 |
 | SQLite WAL | ❌ | P1-5 |
@@ -279,6 +279,34 @@ preferred route is still Docker (`python:3.12-slim`, arm64): rollback is a tag c
 upgrades stop being OS upgrades. In Docker, memcached becomes a sidecar container. Drop `uvloop`,
 which buys nothing at this traffic. For this codebase the 4.2 → 5.2 risk is near zero: five function
 views, two models, no custom middleware. Run `python -Wa manage.py test` to surface deprecations.
+
+**Repo side, 2026-10-19.** The code uses none of the APIs removed in Django 5.0–5.2, so the
+change is to dependencies and the launch command only:
+
+- `requirements.txt` is the full freeze of a verified venv: `Django==5.2.18`,
+  `django-axes==8.3.1`, `django-ratelimit==4.1.0`, `pymemcache==4.0.0`, `gunicorn==26.2.0`,
+  `uvicorn==0.54.0`, `uvicorn-worker==0.4.0`, `httptools==0.9.0`, `h11==0.16.0`,
+  `whitenoise==6.12.0`, plus `asgiref`, `click`, `sqlparse`. It has no hashes yet (P1-1).
+  `uvloop` is dropped. Plain `uvicorn` replaces `uvicorn[standard]`, so `uvloop` and
+  `python-dotenv` aren't pulled back in.
+- **`pymemcache` restored.** An earlier rewrite of the file (`21a816b`) dropped it, which would
+  have made every rate-limited write 500 on a fresh install. The suite couldn't catch this,
+  because `settings_test` uses `LocMemCache`. `ProductionRateLimitConfigTests` now constructs the
+  production cache backend, so a missing client library fails the suite.
+- Since uvicorn 0.30, gunicorn's worker lives in `uvicorn-worker`. `run.sh` and the README now use
+  `-k uvicorn_worker.UvicornWorker`.
+- No `django-ratelimit` release newer than 4.1.0 declares Django 5.2 support. 4.1.0 is kept, and
+  the suite exercises it.
+- CI runs the suite with `python -Wa` on 3.12.
+
+**Verified 2026-10-19** in a fresh venv on the dev box. It has no 3.12, so this ran on 3.13,
+which Django 5.2 also supports; CI covers 3.12. The venv was built from these pins. Results: the
+50-test suite under `-Wa` passes, `makemigrations --check` is clean,
+`check --deploy --fail-level WARNING` passes on the production settings, and `pip-audit` reports
+nothing.
+
+Still open: the first CI run on 3.12, `python manage.py migrate` for the django-axes 6 → 8
+tables, and the Pi runtime itself.
 
 ---
 

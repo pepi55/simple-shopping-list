@@ -5,7 +5,7 @@
 - [ ] P0‑2: Merge and deploy `agent/sec-test` branch
 - [ ] P0‑3: Rotate admin password and verify/rotate `SECRET_KEY`
 - [x] P0‑4: Fix the Caddyfile (dedicated host, request‑body limit, CSP header) – **done**
-- [x] P0‑5: Upgrade to Python 3.12 and Django 5.2 LTS (requirements updated; Python upgrade pending)
+- [ ] P0‑5: Upgrade to Python 3.12 and Django 5.2 LTS – **repo side done** (`requirements.txt` pins Django 5.2.18, `pymemcache` restored, `uvicorn-worker`, uvloop dropped; verified: suite, `check --deploy`, pip-audit); pending: first CI run on 3.12, then the Pi runtime upgrade
 
 ## P1 – Next steps
 - [x] P1‑1: Consolidate to a single `requirements.txt` with a lockfile, add CI workflow, remove `latest_requirements.txt`
