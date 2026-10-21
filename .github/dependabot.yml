@@ -1,0 +1,12 @@
+version: 2
+updates:
+  # Dependabot recognises the pip-compile header in requirements*.txt and
+  # recompiles the hashed locks from requirements*.in.
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
