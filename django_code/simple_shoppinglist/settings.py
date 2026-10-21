@@ -27,7 +27,7 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["list.petar-dev.com"]
+ALLOWED_HOSTS = os.environ["ALLOWED_HOSTS"].split(",")
 
 # The app sits behind a Caddy reverse proxy that terminates TLS. Caddy must
 # unconditionally overwrite X-Forwarded-Proto on every request it forwards --
