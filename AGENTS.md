@@ -40,9 +40,11 @@ A small Django 5.2 LTS app for shared shopping lists. The Django project lives i
 - `django_code/run.sh` — production launch (gunicorn + uvicorn worker, logging config).
 - `django_code/gunicorn_conf.py`, `django_code/logging.conf` — server config.
 - `django_code/Caddyfile` — production reverse proxy; terminates TLS on :443.
-- `requirements.txt` at repo root — full `pip freeze`, exact pins without hashes (hashed
-  lockfile pending, P1-1). No `pyproject.toml`, no `Pipfile`, no `setup.cfg`. Targets
-  Python 3.12 + `Django==5.2.x` (LTS), with `gunicorn`, `uvicorn` + `uvicorn-worker`, `whitenoise`,
+- `requirements.in` at repo root — direct runtime dependencies. `requirements.txt` is the
+  hash-pinned lock compiled from it with `pip-compile --generate-hashes --allow-unsafe`.
+  Never edit the lock by hand. Dev/CI tools live in `requirements-dev.in` /
+  `requirements-dev.txt`. No `pyproject.toml`, no `Pipfile`, no `setup.cfg`. Targets
+  Python 3.12 + Django 5.2 LTS, with `gunicorn`, `uvicorn` + `uvicorn-worker`, `whitenoise`,
   `django-axes`, `django-ratelimit` and `pymemcache`.
 - `TODO.md` — phased security hardening plan; check it before proposing large changes.
 
@@ -53,7 +55,7 @@ A small Django 5.2 LTS app for shared shopping lists. The Django project lives i
 - `DEBUG` is off by default; set `DJANGO_DEBUG=1` to enable. `SECURE_SSL_REDIRECT`
   defaults to on; set `SECURE_SSL_REDIRECT=0` for plain-HTTP local dev. Without that,
   local dev over HTTP will redirect-loop.
-- `ALLOWED_HOSTS` is a comma-separated env var (default `petar-dev.com,.petar-dev.com,pie3`).
+- `ALLOWED_HOSTS` is a required comma-separated env var (no default; `list.petar-dev.com` in production).
   Serving from a new hostname requires updating both `ALLOWED_HOSTS` and
   `CSRF_TRUSTED_ORIGINS` in `settings.py`, or POSTs will fail CSRF validation.
 
@@ -83,6 +85,13 @@ SQLite path resolve correctly.
 
 ## Workflow
 
-- There is no CI config, no pre-commit, no linter, and no type-checker wired up. Don't invent one; if you want one, ask first.
+- CI (`.github/workflows/ci.yml`) has three jobs, run on push, on PRs and weekly:
+  - the suite plus `makemigrations --check`, using `settings_test`;
+  - `check --deploy` plus the rate-limit tests, using the production settings against a
+    memcached service container;
+  - `ruff check django_code` (rule set pinned in `ruff.toml`) plus `pip-audit` on the lock.
+- Dependabot updates both locks and the Actions weekly.
+- `.pre-commit-config.yaml` runs gitleaks; enable it with `pre-commit install`.
+- There is no type-checker. Don't add more tooling without asking first.
 - Migrations live in `django_code/shoppinglist/migrations/`. After model changes, run `python manage.py makemigrations shoppinglist` from `django_code/`.
 - The DB is SQLite at `django_code/db.sqlite3` (gitignored). For schema experiments, copy it aside rather than relying on backups.
