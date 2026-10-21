@@ -1,0 +1,19 @@
+# Runtime: Python 3.12 + Django 5.2 LTS (P0-5). Django 5.2 needs Python >= 3.10.
+#
+# Direct dependencies only. requirements.txt is the hash-pinned lock compiled
+# from this file; see "Dependencies" in README.md.
+Django>=5.2.18,<5.3
+django-axes>=8.3,<9
+django-ratelimit>=4.1,<5
+# Client library for the PyMemcacheCache backend in settings.py. Without it
+# every rate-limited write endpoint returns 500.
+pymemcache>=4.0,<5
+gunicorn>=23.0
+uvicorn>=0.34
+# Home of UvicornWorker since uvicorn deprecated uvicorn.workers in 0.30.
+uvicorn-worker>=0.4
+# The HTTP parser uvicorn prefers. If it's missing, uvicorn falls back to h11.
+httptools>=0.6.4
+# CVE-2025-43859 (chunked-encoding request smuggling) is fixed in 0.16.
+h11>=0.16
+whitenoise>=6.9

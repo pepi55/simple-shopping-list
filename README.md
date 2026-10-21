@@ -14,8 +14,8 @@ Simple applet for tracking shopping lists for multiple users.
 
 ## Running
 
-Requires Python 3.12 (Django 5.2 LTS supports 3.10–3.13): `pip install -r
-requirements.txt`.
+Requires Python 3.12 (Django 5.2 LTS supports 3.10–3.13): `pip install
+--require-hashes -r requirements.txt`.
 
 Rate limiting needs memcached, whose atomic counters are what make the limit
 hold under concurrent requests. On Debian/Raspberry Pi OS: `apt install
@@ -35,3 +35,20 @@ directly on its bind port from off-box — that bypasses TLS and the
 From `django_code/`, with no env vars or memcached needed:
 
 `python manage.py test shoppinglist --settings=simple_shoppinglist.settings_test`
+
+## Dependencies
+
+`requirements.in` lists the direct runtime dependencies. `requirements.txt` is
+the hash-pinned lock compiled from it; don't edit the lock by hand. Dev and CI
+tools (pip-tools, pip-audit, pre-commit, ruff) are locked separately in
+`requirements-dev.in` / `requirements-dev.txt`.
+
+ - Dev setup: `pip install --require-hashes -r requirements-dev.txt`, then
+   `pre-commit install` to enable the gitleaks hook.
+ - After editing a `.in` file, recompile its lock:
+   `pip-compile --generate-hashes --allow-unsafe requirements.in` (or
+   `requirements-dev.in`). Add `--upgrade` to move every pin to the newest
+   allowed version.
+
+Dependabot opens weekly PRs for both locks and for the GitHub Actions. CI runs
+pip-audit on every push and weekly.

@@ -1,0 +1,6 @@
+# Dev and CI tooling, locked separately from the runtime into
+# requirements-dev.txt. Never installed on the Pi.
+pip-tools
+pip-audit
+pre-commit
+ruff
