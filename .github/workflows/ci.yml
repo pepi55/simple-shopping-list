@@ -5,28 +5,77 @@ on:
     branches: [main, "agent/**"]
   pull_request:
     branches: [main]
+  schedule:
+    # Weekly, so pip-audit catches advisories published against unchanged pins.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: pip install --require-hashes -r requirements.txt
       - name: Run tests
-        env:
-          DJANGO_DEBUG: "1"
-          SECRET_KEY: "test-secret-key"
-          ALLOWED_HOSTS: "localhost,127.0.0.1"
+        working-directory: django_code
+        run: python -Wa manage.py test shoppinglist --settings=simple_shoppinglist.settings_test
+      - name: Check migrations are up to date
+        working-directory: django_code
+        run: python manage.py makemigrations --check --dry-run --settings=simple_shoppinglist.settings_test
+
+  # settings_test swaps in LocMemCache, so this job is the only automated run
+  # of the production settings and the real memcached path.
+  production-settings:
+    runs-on: ubuntu-latest
+    services:
+      memcached:
+        image: memcached:1.6
+        ports:
+          - 11211:11211
+    env:
+      ADMIN_URL: mgmt/
+      ALLOWED_HOSTS: list.petar-dev.com
+      MEMCACHED_LOCATION: 127.0.0.1:11211
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install --require-hashes -r requirements.txt
+      - name: Generate a throwaway SECRET_KEY
         run: |
-          cd django_code
-          python -Wa manage.py test shoppinglist --settings=simple_shoppinglist.settings_test
+          key="$(python -c 'import secrets; print(secrets.token_urlsafe(64))')"
+          echo "::add-mask::$key"
+          echo "SECRET_KEY=$key" >> "$GITHUB_ENV"
+      - name: Deploy checks
+        working-directory: django_code
+        run: python manage.py check --deploy --fail-level WARNING
+      - name: Rate limiting against memcached
+        working-directory: django_code
+        run: >-
+          python manage.py test
+          shoppinglist.tests.test_security.RateLimitConcurrencyTests
+          shoppinglist.tests.test_security.ProductionRateLimitConfigTests
+          --settings=simple_shoppinglist.settings
+
+  lint-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev tools
+        run: pip install --require-hashes -r requirements-dev.txt
+      - name: Ruff
+        run: ruff check django_code
+      - name: pip-audit
+        run: pip-audit --strict --no-deps --disable-pip -r requirements.txt

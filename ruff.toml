@@ -1,0 +1,5 @@
+# Pin the rule set instead of relying on ruff's built-in default, which ruff
+# 0.17 widened (I, RUF, EXE, BLE, ...). A Dependabot bump of ruff must not
+# change what CI enforces; widen this list deliberately, in its own change.
+[lint]
+select = ["E4", "E7", "E9", "F"]
