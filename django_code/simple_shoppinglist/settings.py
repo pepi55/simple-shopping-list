@@ -28,7 +28,7 @@ CSRF_COOKIE_SECURE = False
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = [ "127.0.0.1", ".petar-dev.com", "pie3", "192.168.2.43", "84.82.138.101" ]
+ALLOWED_HOSTS = [ "127.0.0.1", "127.0.0.2", "[2a02:a446:bf4:0:ba27:ebff:fe49:114a]", ".petar-dev.com", "pie3", "192.168.2.43", "84.82.138.101" ]
 
 
 # Application definition
